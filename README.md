@@ -1,2 +1,2 @@
-# Pro
-jhgflkjhfdx
+# Projekts
+Jaundzimuso datu reģistrācijas bāze.

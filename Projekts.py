@@ -5,7 +5,7 @@ import json
 import tkinter as tk
 from tkinter import messagebox
 
-DATA_FILE = "datu_faili.json"
+DATA_FILE = "C:/Users/Skolens/Downloads/datu_faili.json"
 
 
 class Persona:
@@ -14,7 +14,7 @@ class Persona:
     def __init__(self, name, lastname, person_code):
         self.name = str(name).capitalize()
         self.lastname = str(lastname).capitalize()
-        self.__person_code = str(person_code)
+        self.__person_code = person_code
 
     def Get_personcode(self):
         """Getter metode vērtības nolasīšanai."""
@@ -24,7 +24,7 @@ class Persona:
         """Setter uzstāda personas kodu un pārbauda tā garumu."""
         to_get_line_between = str(new_code).replace("-", "").strip()
         if len(to_get_line_between) == 11 and to_get_line_between.isdigit():
-            self.__person_code = str(new_code)
+            self.__person_code = to_get_line_between
         else:
             raise ValueError("Personas kodam jāsastāv no 11 cipariem!")
 
@@ -32,13 +32,18 @@ class Persona:
 class Newborns_data(Persona):
     """Apakšklase jaundzimušajiem, kas manto no Persona."""
 
-    def __init__(self, name, lastname, sex, year, month, day, person_code, date2=None):
+    def __init__(self, name, lastname, sex, year=None, month=None, day=None, person_code= "", date2=None):
         super().__init__(name, lastname, person_code)
         self.sex = sex
         if date2:
             self.date2 = date2
         else:
-            self.date2 = datetime(int(year), int(month), int(day)).strftime("%x")
+            try:
+                self.date2 = datetime(int(year), int(month), int(day)).strftime("%x")
+            except ValueError:
+                raise ValueError("Ievadīts nederīgs datums (pārbaudiet gada, mēneša, dienas eksistenci)!")
+            except TypeError:
+                raise ValueError("Gadam, mēnesim un dienai jābūt skaitļiem!")
 
     def Dinamisks_aprekins(self):
         """Dinamisks aprēķins, kas nosaka PK tipu."""
@@ -85,13 +90,10 @@ def ieladet_datus_no_faila():
                         name=x["name"],
                         lastname=x["lastname"],
                         sex=x["sex"],
-                        year=0,
-                        month=0,
-                        day=0,
                         person_code=x["person_code"],
                         date2=x["date2"],
                     )
-                    pagaidu_saraksts.append(atjaunots_berns)
+                    pagaidu_saraksts.append(atjaunots_berns) 
     except FileNotFoundError:
         pass
     except Exception as e:
@@ -118,22 +120,20 @@ def registret_bernu():
             messagebox.showwarning("Kļūda", "Lūdzu, aizpildiet visus laukus!")
             return
 
-        jaunais_mazulis = Newborns_data(vards, uzvards, dzimums, gads, menesis, diena, p_kods, date2=None)
-        jaunais_mazulis.Set_personcode(p_kods)
-
+        
+        jaunais_mazulis = Newborns_data(vards, uzvards, dzimums, gads, menesis, diena, p_kods)
+        
         newborn_list.append(jaunais_mazulis)
         saglabat_datus_faila()
 
         tips = jaunais_mazulis.Dinamisks_aprekins()
         messagebox.showinfo(
             "Success", 
-            f"Reģistrēts: {jaunais_mazulis.name} {jaunais_mazulis.lastname} ({tips})\nDati saglabāti diskā!"
-        )
+            f"Reģistrēts: {jaunais_mazulis.name} {jaunais_mazulis.lastname} ({tips}) Dati saglabāti diskā!")
         notirit_laukus()
     except ValueError as ve:
         messagebox.showerror("Kļūda ievadē", str(ve))
-    except Exception:
-        messagebox.showerror("Kļūda", "Gadam, mēnesim un dienai jābūt skaitļiem!")
+    
 
 
 def mekle_un_labo_bernadatus():
@@ -143,7 +143,7 @@ def mekle_un_labo_bernadatus():
     jaunais_uzvards = entry_new_lastname.get()
 
     if not meklejamais_kods:
-        messagebox.showwarning("Kļūda", "Ievadiet personas kodu meklēšanai!")
+        messagebox.showwarning("Kļūda, Ievadiet personas kodu meklēšanai!")
         return
 
     atrastais_berns = None
@@ -240,4 +240,3 @@ entry_new_lastname.grid(row=12, column=1, pady=3)
 tk.Button(logs, text="Meklēt un Saglabāt izmaiņas", command=mekle_un_labo_bernadatus).grid(row=13, column=0, columnspan=2, pady=15)
 
 logs.mainloop()
-
